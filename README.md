@@ -1,5 +1,9 @@
 # Claude Duck
 
+<p align="center">
+  <img src="claude-duck-image.png" alt="Claude Duck" width="200" />
+</p>
+
 > Claude + Google Docs. Ask Claude to create, read, and edit documents — directly, via API.
 
 No clipboard tricks. No manual copy-paste. Claude writes straight into Google Docs through the Google Docs REST API, triggered by natural language from a Claude Code session or a local web UI.
