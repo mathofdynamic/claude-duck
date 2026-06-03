@@ -1,7 +1,7 @@
 # Claude Duck
 
 <p align="center">
-  <img src="claude-duck-image.png" alt="Claude Duck" width="200" />
+  <img src="claude-duck-image.png" alt="Claude Duck" width="600" />
 </p>
 
 > Claude + Google Docs. Ask Claude to create, read, and edit documents — directly, via API.
