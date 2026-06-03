@@ -14,6 +14,8 @@ No clipboard tricks. No manual copy-paste. Claude writes straight into Google Do
 
 <p align="center">
   <img src="Extention-screenshot.png" alt="Claude Duck Extension Screenshot" width="600" />
+  <br /><br />
+  <img src="Extention-screenshot-2.png" alt="Claude Duck Extension Screenshot 2" width="600" />
 </p>
 
 ---
