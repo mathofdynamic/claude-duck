@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Claude Duck</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <div class="container">
+    <header>
+      <span class="logo">🦆</span>
+      <h1>Claude Duck</h1>
+    </header>
+
+    <div id="server-warning" class="warning hidden">
+      <span>⚠️</span> Local server is not running — start it with: <code>npm start</code>
+    </div>
+
+    <div class="form-group">
+      <label for="prompt">What should Claude write?</label>
+      <textarea
+        id="prompt"
+        placeholder="Ask Claude to write something..."
+        rows="5"
+      ></textarea>
+    </div>
+
+    <div class="form-group">
+      <label for="mode">Destination</label>
+      <select id="mode">
+        <option value="current">Write to current doc</option>
+        <option value="new">Create new document</option>
+      </select>
+    </div>
+
+    <div class="form-group hidden" id="title-group">
+      <label for="doc-title">Document title</label>
+      <input
+        type="text"
+        id="doc-title"
+        placeholder="Untitled document"
+        value="Claude Duck Output"
+      />
+    </div>
+
+    <button id="generate-btn" class="btn-primary">
+      <span id="btn-text">Generate</span>
+      <span id="btn-spinner" class="spinner hidden"></span>
+    </button>
+
+    <div id="status" class="status hidden"></div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

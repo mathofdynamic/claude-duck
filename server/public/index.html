@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Claude Duck</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0f0f1a;
+      color: #e0e0e0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 16px;
+    }
+
+    .app { width: 100%; max-width: 720px; display: flex; flex-direction: column; gap: 24px; }
+
+    /* Header */
+    header { display: flex; align-items: center; justify-content: space-between; }
+    .logo { display: flex; align-items: center; gap: 10px; }
+    .logo-icon { font-size: 32px; line-height: 1; }
+    h1 { font-size: 22px; font-weight: 700; color: #f5c518; }
+    .subtitle { font-size: 12px; color: #6060a0; margin-top: 2px; }
+
+    /* Auth badge */
+    .auth-badge {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 12px; padding: 6px 12px;
+      border-radius: 20px; border: 1px solid;
+      text-decoration: none; cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .auth-badge:hover { opacity: 0.8; }
+    .auth-badge.ok { color: #6adf6a; border-color: #2a6a2a; background: #0a2a0a; }
+    .auth-badge.warn { color: #f5c518; border-color: #8a6a00; background: #1a1500; }
+    .auth-badge.error { color: #df6a6a; border-color: #6a2a2a; background: #2a0a0a; }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+
+    /* Setup banner */
+    .setup-banner {
+      background: #1a1200; border: 1px solid #6a4a00;
+      border-radius: 10px; padding: 20px 24px;
+      display: flex; flex-direction: column; gap: 12px;
+    }
+    .setup-banner h2 { color: #f5c518; font-size: 15px; }
+    .setup-banner ol { padding-left: 18px; display: flex; flex-direction: column; gap: 8px; font-size: 13px; color: #c0c0c0; line-height: 1.6; }
+    .setup-banner a { color: #f5c518; }
+    .setup-banner code { background: #0f0f1a; padding: 1px 6px; border-radius: 4px; font-size: 12px; }
+    .btn-connect {
+      align-self: flex-start; background: #f5c518; color: #0f0f1a;
+      border: none; border-radius: 6px; padding: 8px 16px;
+      font-size: 13px; font-weight: 700; cursor: pointer;
+      text-decoration: none; display: inline-block;
+    }
+    .btn-connect:hover { background: #e5b508; }
+
+    /* Tabs */
+    .tabs { display: flex; gap: 4px; border-bottom: 1px solid #2a2a4a; padding-bottom: 0; }
+    .tab {
+      padding: 8px 16px; border-radius: 6px 6px 0 0;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      border: 1px solid transparent; border-bottom: none;
+      color: #6060a0; transition: all 0.15s;
+      user-select: none;
+    }
+    .tab:hover { color: #e0e0e0; }
+    .tab.active {
+      background: #1a1a2e; border-color: #2a2a4a;
+      color: #f5c518;
+      position: relative; bottom: -1px;
+    }
+
+    /* Card */
+    .card {
+      background: #1a1a2e; border: 1px solid #2a2a4a;
+      border-radius: 0 10px 10px 10px; padding: 24px;
+      display: flex; flex-direction: column; gap: 16px;
+    }
+
+    /* Form elements */
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    label { font-size: 11px; font-weight: 600; color: #6060a0; text-transform: uppercase; letter-spacing: 0.5px; }
+    input, textarea, select {
+      background: #0f0f1a; border: 1px solid #2a2a4a;
+      border-radius: 6px; color: #e0e0e0;
+      font-size: 13px; font-family: inherit;
+      padding: 9px 12px; width: 100%; outline: none;
+      transition: border-color 0.15s;
+    }
+    input:focus, textarea:focus, select:focus { border-color: #f5c518; }
+    textarea { resize: vertical; min-height: 120px; line-height: 1.6; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    /* Toggle */
+    .toggle-row { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #9090b0; }
+    input[type="checkbox"] { width: auto; accent-color: #f5c518; cursor: pointer; }
+
+    /* Submit button */
+    .btn-submit {
+      background: #f5c518; color: #0f0f1a;
+      border: none; border-radius: 6px; padding: 11px;
+      font-size: 14px; font-weight: 700; cursor: pointer;
+      transition: background 0.15s, opacity 0.15s;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn-submit:hover:not(:disabled) { background: #e5b508; }
+    .btn-submit:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    /* Spinner */
+    .spinner {
+      width: 15px; height: 15px;
+      border: 2px solid rgba(15,15,26,0.3);
+      border-top-color: #0f0f1a;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Result */
+    .result {
+      border-radius: 8px; padding: 16px;
+      display: flex; flex-direction: column; gap: 10px;
+      font-size: 13px; line-height: 1.6;
+    }
+    .result.success { background: #0a2a0a; border: 1px solid #2a6a2a; }
+    .result.error   { background: #2a0a0a; border: 1px solid #6a2a2a; color: #df6a6a; }
+    .result-title { font-weight: 600; color: #6adf6a; }
+    .result-content {
+      background: #0f1a0f; border: 1px solid #1a3a1a;
+      border-radius: 6px; padding: 12px;
+      white-space: pre-wrap; font-size: 12px;
+      max-height: 300px; overflow-y: auto; color: #c0e0c0;
+      font-family: monospace;
+    }
+    .result-link a {
+      color: #f5c518; font-weight: 600; text-decoration: none;
+    }
+    .result-link a:hover { text-decoration: underline; }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Header -->
+  <header>
+    <div class="logo">
+      <span class="logo-icon">🦆</span>
+      <div>
+        <h1>Claude Duck</h1>
+        <div class="subtitle">Claude × Google Docs</div>
+      </div>
+    </div>
+    <div id="auth-badge" class="auth-badge warn">
+      <span class="dot"></span>
+      <span id="auth-label">Checking...</span>
+    </div>
+  </header>
+
+  <!-- Setup banner (shown when not authenticated) -->
+  <div id="setup-banner" class="setup-banner hidden">
+    <h2>One-time Google setup required</h2>
+    <ol>
+      <li>Go to <a href="https://console.cloud.google.com" target="_blank">console.cloud.google.com</a> → create or select a project</li>
+      <li>Enable the <strong>Google Docs API</strong> and <strong>Google Drive API</strong></li>
+      <li>Go to <strong>Credentials</strong> → Create → <strong>OAuth 2.0 Client ID</strong></li>
+      <li>Choose <strong>Web application</strong>, add <code>http://localhost:3001/auth/callback</code> as an Authorized redirect URI</li>
+      <li>Download the JSON and save it as <code>server/credentials.json</code></li>
+      <li>Then click the button below to log in with your Google account</li>
+    </ol>
+    <a class="btn-connect" href="/auth/google">Connect Google Account</a>
+  </div>
+
+  <!-- Tabs -->
+  <div>
+    <div class="tabs">
+      <div class="tab active" data-tab="create">Create Doc</div>
+      <div class="tab" data-tab="edit">Edit Doc</div>
+      <div class="tab" data-tab="read">Read Doc</div>
+    </div>
+
+    <!-- Create -->
+    <div class="card" id="tab-create">
+      <div class="field">
+        <label>Document Title</label>
+        <input id="create-title" type="text" placeholder="My Document" value="Claude Duck Document" />
+      </div>
+      <div class="field">
+        <label>Prompt — what should Claude write?</label>
+        <textarea id="create-prompt" placeholder="Write a project proposal for a mobile app that tracks daily habits..."></textarea>
+      </div>
+      <button class="btn-submit" id="create-btn">
+        <span id="create-btn-text">Create Document</span>
+        <span id="create-spinner" class="spinner hidden"></span>
+      </button>
+      <div id="create-result" class="hidden"></div>
+    </div>
+
+    <!-- Edit -->
+    <div class="card hidden" id="tab-edit">
+      <div class="field">
+        <label>Google Doc ID or URL</label>
+        <input id="edit-docid" type="text" placeholder="Paste the doc ID or full URL" />
+      </div>
+      <div class="field">
+        <label>Prompt — what should Claude do?</label>
+        <textarea id="edit-prompt" placeholder="Add a section about marketing strategy..."></textarea>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label>Write mode</label>
+          <select id="edit-mode">
+            <option value="append">Append to document</option>
+            <option value="replace">Replace all content</option>
+          </select>
+        </div>
+        <div class="field" style="justify-content: flex-end;">
+          <label>&nbsp;</label>
+          <div class="toggle-row">
+            <input type="checkbox" id="edit-include-content" />
+            <label for="edit-include-content" style="text-transform:none;letter-spacing:0;font-size:13px;color:#9090b0;">Send current doc to Claude</label>
+          </div>
+        </div>
+      </div>
+      <button class="btn-submit" id="edit-btn">
+        <span id="edit-btn-text">Update Document</span>
+        <span id="edit-spinner" class="spinner hidden"></span>
+      </button>
+      <div id="edit-result" class="hidden"></div>
+    </div>
+
+    <!-- Read -->
+    <div class="card hidden" id="tab-read">
+      <div class="field">
+        <label>Google Doc ID or URL</label>
+        <input id="read-docid" type="text" placeholder="Paste the doc ID or full URL" />
+      </div>
+      <button class="btn-submit" id="read-btn">
+        <span id="read-btn-text">Read Document</span>
+        <span id="read-spinner" class="spinner hidden"></span>
+      </button>
+      <div id="read-result" class="hidden"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // ── Helpers ────────────────────────────────────────────────────────────────
+
+  function extractDocId(input) {
+    input = input.trim()
+    const match = input.match(/\/document\/d\/([a-zA-Z0-9_-]+)/)
+    return match ? match[1] : input
+  }
+
+  function setLoading(btnText, spinner, btn, loading, label) {
+    btn.disabled = loading
+    btnText.textContent = loading ? 'Working...' : label
+    spinner.classList.toggle('hidden', !loading)
+  }
+
+  function showResult(el, { type, title, content, url, error }) {
+    el.classList.remove('hidden')
+    if (type === 'error') {
+      el.className = 'result error'
+      el.innerHTML = `<strong>Error:</strong> ${escapeHtml(error)}`
+      return
+    }
+    el.className = 'result success'
+    let html = ''
+    if (title) html += `<div class="result-title">✓ ${escapeHtml(title)}</div>`
+    if (content) html += `<div class="result-content">${escapeHtml(content)}</div>`
+    if (url) html += `<div class="result-link"><a href="${url}" target="_blank">Open in Google Docs →</a></div>`
+    el.innerHTML = html
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+  }
+
+  // ── Auth status ────────────────────────────────────────────────────────────
+
+  async function checkAuth() {
+    try {
+      const res = await fetch('/auth/status')
+      const { credentialsExist, authenticated } = await res.json()
+      const badge = document.getElementById('auth-badge')
+      const label = document.getElementById('auth-label')
+      const banner = document.getElementById('setup-banner')
+
+      if (authenticated) {
+        badge.className = 'auth-badge ok'
+        label.textContent = 'Google connected'
+        banner.classList.add('hidden')
+      } else if (credentialsExist) {
+        badge.className = 'auth-badge warn'
+        label.textContent = 'Not signed in'
+        badge.href = '/auth/google'
+        badge.tagName !== 'A' && badge.setAttribute('onclick', "location.href='/auth/google'")
+        banner.classList.remove('hidden')
+      } else {
+        badge.className = 'auth-badge error'
+        label.textContent = 'Setup needed'
+        banner.classList.remove('hidden')
+      }
+    } catch {
+      document.getElementById('auth-badge').className = 'auth-badge error'
+      document.getElementById('auth-label').textContent = 'Server offline'
+    }
+  }
+
+  // ── Tabs ───────────────────────────────────────────────────────────────────
+
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'))
+      document.querySelectorAll('.card').forEach(c => c.classList.add('hidden'))
+      tab.classList.add('active')
+      document.getElementById('tab-' + tab.dataset.tab).classList.remove('hidden')
+    })
+  })
+
+  // ── Create ─────────────────────────────────────────────────────────────────
+
+  const createBtn = document.getElementById('create-btn')
+  const createBtnText = document.getElementById('create-btn-text')
+  const createSpinner = document.getElementById('create-spinner')
+  const createResult = document.getElementById('create-result')
+
+  createBtn.addEventListener('click', async () => {
+    const title = document.getElementById('create-title').value.trim() || 'Claude Duck Document'
+    const prompt = document.getElementById('create-prompt').value.trim()
+
+    setLoading(createBtnText, createSpinner, createBtn, true, 'Create Document')
+    createResult.classList.add('hidden')
+
+    try {
+      const res = await fetch('/docs/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, prompt })
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+      showResult(createResult, {
+        title: `Document created: "${data.title}"`,
+        url: data.url
+      })
+    } catch (err) {
+      showResult(createResult, { type: 'error', error: err.message })
+    }
+
+    setLoading(createBtnText, createSpinner, createBtn, false, 'Create Document')
+  })
+
+  // ── Edit ───────────────────────────────────────────────────────────────────
+
+  const editBtn = document.getElementById('edit-btn')
+  const editBtnText = document.getElementById('edit-btn-text')
+  const editSpinner = document.getElementById('edit-spinner')
+  const editResult = document.getElementById('edit-result')
+
+  editBtn.addEventListener('click', async () => {
+    const rawId = document.getElementById('edit-docid').value.trim()
+    const docId = extractDocId(rawId)
+    const prompt = document.getElementById('edit-prompt').value.trim()
+    const mode = document.getElementById('edit-mode').value
+    const includeCurrentContent = document.getElementById('edit-include-content').checked
+
+    if (!docId) return showResult(editResult, { type: 'error', error: 'Please enter a document ID or URL.' })
+    if (!prompt) return showResult(editResult, { type: 'error', error: 'Please enter a prompt.' })
+
+    setLoading(editBtnText, editSpinner, editBtn, true, 'Update Document')
+    editResult.classList.add('hidden')
+
+    try {
+      const res = await fetch(`/docs/update/${docId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt, mode, includeCurrentContent })
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+      showResult(editResult, {
+        title: `Document updated: "${data.title}"`,
+        content: data.content,
+        url: data.url
+      })
+    } catch (err) {
+      showResult(editResult, { type: 'error', error: err.message })
+    }
+
+    setLoading(editBtnText, editSpinner, editBtn, false, 'Update Document')
+  })
+
+  // ── Read ───────────────────────────────────────────────────────────────────
+
+  const readBtn = document.getElementById('read-btn')
+  const readBtnText = document.getElementById('read-btn-text')
+  const readSpinner = document.getElementById('read-spinner')
+  const readResult = document.getElementById('read-result')
+
+  readBtn.addEventListener('click', async () => {
+    const rawId = document.getElementById('read-docid').value.trim()
+    const docId = extractDocId(rawId)
+
+    if (!docId) return showResult(readResult, { type: 'error', error: 'Please enter a document ID or URL.' })
+
+    setLoading(readBtnText, readSpinner, readBtn, true, 'Read Document')
+    readResult.classList.add('hidden')
+
+    try {
+      const res = await fetch(`/docs/read/${docId}`)
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+      showResult(readResult, {
+        title: data.title,
+        content: data.text || '(document is empty)',
+        url: data.url
+      })
+    } catch (err) {
+      showResult(readResult, { type: 'error', error: err.message })
+    }
+
+    setLoading(readBtnText, readSpinner, readBtn, false, 'Read Document')
+  })
+
+  // ── Init ───────────────────────────────────────────────────────────────────
+
+  const params = new URLSearchParams(location.search)
+  if (params.get('auth') === 'success') {
+    history.replaceState({}, '', '/')
+  }
+  if (params.get('error')) {
+    alert('Error: ' + params.get('error'))
+    history.replaceState({}, '', '/')
+  }
+
+  checkAuth()
+</script>
+</body>
+</html>
