@@ -10,6 +10,14 @@ No clipboard tricks. No manual copy-paste. Claude writes straight into Google Do
 
 ---
 
+## Screenshots
+
+<p align="center">
+  <img src="Extention-screenshot.png" alt="Claude Duck Extension Screenshot" width="600" />
+</p>
+
+---
+
 ## Overview
 
 Claude Duck is a local Node.js server that bridges Claude Code with Google Docs. It exposes a REST API that Claude Code skills call automatically, so you can say *"create a project proposal for a mobile app"* and get a formatted Google Doc in return — without leaving your terminal.
